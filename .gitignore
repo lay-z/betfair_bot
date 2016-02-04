@@ -1,0 +1,12 @@
+# Generic Python Stuff
+*.pyc
+.cache
+
+# Build your own damn certificates :P
+certs/*
+
+# Intelij Jazz
+.idea
+
+# Virtual environment Jazz
+venv
