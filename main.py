@@ -1,44 +1,48 @@
-from betfair import Betfair
-from betfair.models import MarketFilter
-from betfair.constants import MarketProjection
-from constants import DEVELOPER_APP_KEY, CERT_FILE, USERNAME, PASSWORD
+import time
 
-client = Betfair(DEVELOPER_APP_KEY, CERT_FILE)
-client.login(USERNAME, PASSWORD)
+# from CaptureMatch import get_markets_ids, get_competition, convert_to_market_objs
+from db_functions import write_markets_to_database, get_live_games_market_ids, clean_out_db
 
-event_types = client.list_event_types(
-    MarketFilter(text_query='Football')
-)
-premier_league = client.list_competitions(
-    MarketFilter(text_query='Barclays Premier League')
-)[0].competition
-print(len(event_types))                 # Get All the amounts of different events
-print(event_types[0].event_type.name)   # 'Tennis'
-football_event_type = event_types[0]
-
-
-markets = client.list_market_catalogue(
-    MarketFilter(
-        event_type_ids=[football_event_type.event_type.id],
-        market_type_codes="MATCH_ODDS",  # Betfair has a set of the types of codes
-        competition_ids=[premier_league.id]
-    ),
-    market_projection=[MarketProjection.EVENT]  # also return details about market event
-)
-print(dir(markets[4]))
-print(len(markets))
-
-event = markets[5]
-
-
-
-# print("Getting information for {} with market_id: {}".format(event.market_name, event.market_id))
+# Lets clean out our database first!
+# clean_out_db()
 #
-# market_book = client.list_market_book(
-#     market_ids=event.market_id,
-# )
+market_codes = ["MATCH_ODDS"]
+# Find competition
+competition = get_competition("Barclays Premier League")
 
-# print("for the market:{}, Total available: {}".format(markets[5].market_name, market_book.total_available))
 
-for market in markets:
-    print("Game: {}, total matched:{}, market id:{}".format(market.event.name, market.total_matched, market.market_id))
+# Find all markets for competition and place into mongodb
+
+markets = get_markets_ids(
+    competition=competition,
+    market_type_codes=market_codes
+)
+
+print("found {} marketIds".format(len(markets)))
+markets = convert_to_market_objs(markets)
+resp = write_markets_to_database(markets)
+
+# Make sure data written
+if not resp.acknowledged:
+    print("Euston we have a problem!")
+
+
+# Forever keep searching for games that are live.
+while True:
+    # Find list of markets inplay
+    market_ids = get_live_games_market_ids()
+    print(len(market_ids))
+    time.sleep(1)   # now wait a second
+
+
+# # Combine all runners in to nice array
+# runners = []
+# for market in markets:
+#     runners += market.runners
+#
+#
+# # Get information for Markets
+# books = get_books(market_ids=marketIds)
+#
+# for book in books:
+#     print

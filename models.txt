@@ -1,0 +1,27 @@
+eventObj
+========
+
+totalMatched: <float>,
+description: None,
+openDate: datetime.datetime (for the event)
+marketId: string
+competition: Competition
+marketStartTime: None,
+runners: [
+    handicap: <float>
+    runnerName: <string>,
+    metadata: None,
+    sortPriority: <int>,
+    selectionId: <int>
+}]
+marketName: <String>,
+eventType: None,
+completed: <Bool>,
+event: {
+        name: <Int>,
+        id: <Int>,
+        venue: <VENUE>,
+        countryCode: <String>,
+        timezone: <String>
+},
+status: <betfair.MarketStatus>
