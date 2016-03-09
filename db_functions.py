@@ -1,11 +1,11 @@
 from pymongo import MongoClient, UpdateOne, InsertOne
 from datetime import datetime, timedelta
-from config import DB_NAME, MARKET_COLLECTION, MARKET_BOOK_COLLECTION, STATUS
+from config import DB_NAME, MARKETS_COLLECTION, MARKET_BOOK_COLLECTION, STATUS
 from threading import Thread
 
 # Connect to mongo database
 c = MongoClient()
-col = c[DB_NAME][MARKET_COLLECTION]
+markets_col = c[DB_NAME][MARKETS_COLLECTION]
 book_col = c[DB_NAME][MARKET_BOOK_COLLECTION]
 
 class db_writer(Thread):
@@ -52,7 +52,7 @@ def write_markets_to_database(markets):
     :return: Instance of Mongodb InsertManyResult.
     """
     # write all changes into db
-    return col.insert_many(markets)
+    return markets_col.insert_many(markets)
 
 
 def write_books_to_database(books):
@@ -73,13 +73,11 @@ def get_live_games_market_ids():
 
     # Find games where openDates are
     # earlier than current time, but status is also open
-    d = datetime.now()+timedelta(weeks=1)
-    print(d)
-    cur = col.find(
+    cur = markets_col.find(
         {"openDate":
-             {"$lt": d},
+             {"$lt": datetime.now()},
          "status":
              {"$gt": STATUS["CLOSED"]}
          })
 
-    return [(market["marketId"], market["event"]["name"]) for market in cur]
+    return [(market["marketId"]) for market in cur]
