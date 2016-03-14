@@ -1,4 +1,5 @@
 from pymongo import MongoClient, UpdateOne, InsertOne
+from pymongo.errors import BulkWriteError
 from datetime import datetime, timedelta
 from config import DB_NAME, MARKETS_COLLECTION, MARKET_BOOK_COLLECTION, STATUS
 from threading import Thread
@@ -8,8 +9,8 @@ c = MongoClient()
 markets_col = c[DB_NAME][MARKETS_COLLECTION]
 book_col = c[DB_NAME][MARKET_BOOK_COLLECTION]
 
-class db_writer(Thread):
 
+class db_writer(Thread):
     def __init__(self, q):
         """
 
@@ -61,8 +62,25 @@ def write_books_to_database(books):
     :param books: Books returned from betfair
     :return: Instance of mongodb InsertManyResult
     """
-    return book_col.insert_many(books)
+    market_updates = []  # Any markets that need to be closed
 
+    # iterate through books and check if any markets are closed
+    for book in books:
+        if book["status"] == STATUS["CLOSED"]:
+            market_updates.append(
+                UpdateOne(
+                    {"marketId": book["marketId"]},
+                    {"$set": {"status": STATUS["CLOSED"]}}
+                )
+            )
+
+    # TODO error correction if bulk writes don't work?
+    try:
+        if len(market_updates) > 0:
+            markets_col.bulk_write(market_updates)
+    except BulkWriteError as e:
+        print(e.details)
+    return book_col.insert_many(books)
 
 def get_live_games_market_ids():
     """
@@ -80,4 +98,4 @@ def get_live_games_market_ids():
              {"$gt": STATUS["CLOSED"]}
          })
 
-    return [(market["marketId"]) for market in cur]
+    return [market["marketId"] for market in cur]

@@ -4,7 +4,7 @@ from time import sleep
 from betfair import Betfair
 from betfair.models import MarketFilter, PriceProjection
 from betfair.constants import MarketProjection, PriceData, OrderProjection, MatchProjection, MarketStatus
-from config import DEVELOPER_APP_KEY, CERT_FILE, USERNAME, PASSWORD, APP_KEY
+from config import DEVELOPER_APP_KEY, CERT_FILE, USERNAME, PASSWORD, APP_KEY, STATUS
 
 client = Betfair(APP_KEY, CERT_FILE)
 client.login(USERNAME, PASSWORD)
@@ -49,12 +49,11 @@ def get_markets_ids(competition, market_type_codes):
         MarketFilter(
             market_type_codes=market_type_codes,
             competition_ids=[competition.id],
-            in_play_only=False  # Only get games that are currently running/in play
+            in_play_only=True  # Only get games that are currently running/in play
         ),
         market_projection=[MarketProjection.EVENT, MarketProjection.RUNNER_DESCRIPTION]
         # also return details about market event
     )
-
 
 
 def get_books(market_ids):

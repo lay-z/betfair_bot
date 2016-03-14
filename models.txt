@@ -1,5 +1,5 @@
-eventObj
-========
+market
+======
 
 totalMatched: <float>,
 description: None,
@@ -25,3 +25,40 @@ event: {
         timezone: <String>
 },
 status: <betfair.MarketStatus>
+
+
+market-book
+===========
+numberOfActiveRunners: <int>,
+marketId : <string>,
+version : <int>,
+lastMatchTime : "2016-03-14T10:39:05.288000",
+complete : <bool>,
+numberOfWinners : <int>,
+inplay : <bool>,
+numberOfActiveRunners : <int>,
+bspReconciled : <bool>,
+runners: [{
+        handicap : <int>,
+        removalDate : null,
+        adjustmentFactor : null,
+        matches : null,
+        selectionId : <int>,
+        totalMatched : <float>,
+        sp : null,
+        ex : {
+            tradedVolume: [],
+            availableToLay: [{
+                price: <float>
+                size: <float>
+            }],
+            availableToBack: [{
+                price: <float>
+                size: <float>
+            }],
+            status : <betfair.marketstatus>,
+            orders : null,
+            lastPriceTraded : <float>
+        }
+}],
+
