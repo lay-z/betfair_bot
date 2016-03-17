@@ -32,7 +32,7 @@ market-book
 numberOfActiveRunners: <int>,
 marketId : <string>,
 version : <int>,
-lastMatchTime : "2016-03-14T10:39:05.288000",
+lastMatchTime : <datetime>,
 complete : <bool>,
 numberOfWinners : <int>,
 inplay : <bool>,

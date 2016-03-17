@@ -1,6 +1,6 @@
 import time
 
-from betfair_functions import get_markets_ids, get_competition, convert_to_market_objs, get_books
+from betfair_functions import get_markets_ids, get_competition, convert_to_market_objs, get_books, convert_to_market_book_objs
 from db_functions import write_markets_to_database, get_live_games_market_ids, clean_out_db, write_books_to_database
 
 # Lets clean out our database first!
@@ -8,7 +8,7 @@ from db_functions import write_markets_to_database, get_live_games_market_ids, c
 
 market_codes = ["MATCH_ODDS"]
 # Find competition
-competition = get_competition("Armenian First League")
+competition = get_competition("Europa League")
 
 
 # Find all markets for competition and place into mongodb
@@ -31,20 +31,10 @@ if not resp.acknowledged:
 while True:
     # Find list of markets inplay
     market_ids = get_live_games_market_ids()
-    if len(market_ids) > 0:
-        write_books_to_database([book.to_primitive() for book in get_books(market_ids)])
+    if len(market_ids) == 0:
+        print("no markets to get")
+    else:
+        write_books_to_database(convert_to_market_book_objs(get_books(market_ids)))
         print("written down {} books to database".format(len(market_ids)))
     time.sleep(1)   # now wait a second
 
-
-# # Combine all runners in to nice array
-# runners = []
-# for market in markets:
-#     runners += market.runners
-#
-#
-# # Get information for Markets
-# books = get_books(market_ids=marketIds)
-#
-# for book in books:
-#     print

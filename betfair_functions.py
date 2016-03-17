@@ -90,6 +90,20 @@ def convert_to_market_objs(market_catalogues):
         catalogues.append(catalogue)
     return catalogues
 
+def convert_to_market_book_objs(market_books):
+    """
+    Converts betfair market_book models into objects to store into mongo
+    :param market_books:
+    :return: list of dictionaires to write to market-book database
+    """
+    formated_books = []
+    for book in market_books:
+        tmp_book = book.to_primitive()
+        tmp_book["lastMatchTime"] = book.last_match_time
+        tmp_book["status"] = STATUS[book["status"]]
+        formated_books.append(tmp_book)
+
+    return formated_books
 
 if __name__ == "__main__":
     timeStop = datetime.now() + timedelta(minutes=3)
