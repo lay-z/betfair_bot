@@ -53,7 +53,7 @@ def write_markets_to_database(markets):
     :return: Instance of Mongodb InsertManyResult.
     """
     # write all changes into db
-    return markets_col.insert_many(markets)
+    return markets_col.insert_many(markets, ordered=False)
 
 
 def write_books_to_database(books):

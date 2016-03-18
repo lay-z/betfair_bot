@@ -49,7 +49,7 @@ def get_markets_ids(competition, market_type_codes):
         MarketFilter(
             market_type_codes=market_type_codes,
             competition_ids=[competition.id],
-            in_play_only=True  # Only get games that are currently running/in play
+            in_play_only=False  # Only get games that are currently running/in play
         ),
         market_projection=[MarketProjection.EVENT, MarketProjection.RUNNER_DESCRIPTION]
         # also return details about market event
