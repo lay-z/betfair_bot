@@ -3,6 +3,9 @@ decorator==4.0.6
 enum34==1.1.2
 inflection==0.3.1
 invoke==0.12.0
+py==1.4.31
+pymongo==3.2.1
+pytest==2.9.0
 python-dateutil==2.4.2
 requests==2.9.1
 schematics==1.1.1
