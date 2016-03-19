@@ -10,29 +10,29 @@ client = Betfair(APP_KEY, CERT_FILE)
 client.login(USERNAME, PASSWORD)
 
 
-class CaptureMatch(threading.Thread):
-    def __init__(self, queue):
-        """
-
-        :param time_stop: *datetime* time to stop exectuion of code
-        :param delta: *int* number of seconds to wait
-        :param game_name: *string* String representation of game
-        :return:
-        """
-        threading.Thread.__init__(self)
-        # self.time_start = time_start
-        self.time_stop = time_stop
-        print(self.time_stop)
-        self.delta = delta
-        self.game_name = game_name
-        self.queue = queue
-
-    def run(self):
-        current_datetime = datetime.now()
-        while current_datetime < self.time_stop:
-            print("Currently at time: {} with thread {}".format(current_datetime, self.game_name))
-            sleep(self.delta)
-            current_datetime = datetime.now()
+# class CaptureMatch(threading.Thread):
+#     def __init__(self, queue):
+#         """
+#
+#         :param time_stop: *datetime* time to stop exectuion of code
+#         :param delta: *int* number of seconds to wait
+#         :param game_name: *string* String representation of game
+#         :return:
+#         """
+#         threading.Thread.__init__(self)
+#         # self.time_start = time_start
+#         self.time_stop = time_stop
+#         print(self.time_stop)
+#         self.delta = delta
+#         self.game_name = game_name
+#         self.queue = queue
+#
+#     def run(self):
+#         current_datetime = datetime.now()
+#         while current_datetime < self.time_stop:
+#             print("Currently at time: {} with thread {}".format(current_datetime, self.game_name))
+#             sleep(self.delta)
+#             current_datetime = datetime.now()
 
 
 def get_markets_ids(competition, market_type_codes):
@@ -69,10 +69,11 @@ def get_books(market_ids):
 
 
 def get_competition(name):
-    return client.list_competitions(
-        MarketFilter(text_query=name)
-    )[0].competition
-
+    c = client.list_competitions(
+        MarketFilter(text_query=name, event_type_ids=["7", "233", "4"])
+    )
+    if len(c) > 0:
+        return c
 
 def convert_to_market_objs(market_catalogues):
     """

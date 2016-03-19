@@ -9,33 +9,33 @@ c = MongoClient()
 markets_col = c[DB_NAME][MARKETS_COLLECTION]
 book_col = c[DB_NAME][MARKET_BOOK_COLLECTION]
 
-
-class db_writer(Thread):
-    def __init__(self, q):
-        """
-
-        :param db: mongodb to be written to
-        :param q: Queue to write data from
-        :return:
-        """
-        Thread.__init__(self)
-        self.q = q
-
-    def run(self):
-        # receive item from queue
-        data = self.q.get()
-
-        # Process data to get it into format to save to mongodb
-
-        # Check if market is no longer active
-        if data.status == "CLOSED":
-            # Write to events collection event status is now closed
-            pass
-        # Save to mongodb
-
-
-        # Let queue know that task is complete
-        self.q.task_done()
+#
+# class db_writer(Thread):
+#     def __init__(self, q):
+#         """
+#
+#         :param db: mongodb to be written to
+#         :param q: Queue to write data from
+#         :return:
+#         """
+#         Thread.__init__(self)
+#         self.q = q
+#
+#     def run(self):
+#         # receive item from queue
+#         data = self.q.get()
+#
+#         # Process data to get it into format to save to mongodb
+#
+#         # Check if market is no longer active
+#         if data.status == "CLOSED":
+#             # Write to events collection event status is now closed
+#             pass
+#         # Save to mongodb
+#
+#
+#         # Let queue know that task is complete
+#         self.q.task_done()
 
 
 def clean_out_db():
