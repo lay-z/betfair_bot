@@ -70,7 +70,7 @@ def get_books(market_ids):
 
 def get_competition(name):
     c = client.list_competitions(
-        MarketFilter(text_query=name, event_type_ids=["7", "233", "4"])
+        MarketFilter(text_query=name)
     )
     if len(c) > 0:
         return c
@@ -102,6 +102,7 @@ def convert_to_market_book_objs(market_books):
         tmp_book = book.to_primitive()
         tmp_book["lastMatchTime"] = book.last_match_time
         tmp_book["status"] = STATUS[book["status"]]
+        tmp_book["timeReceived"] = datetime.now()
         formated_books.append(tmp_book)
 
     return formated_books
