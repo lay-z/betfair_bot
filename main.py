@@ -65,8 +65,8 @@ def capture_games(time_interval):
     while True:
         # Find list of markets inplay
         market_ids = get_live_games_market_ids()
-        print("Found {} market Ids".format(len(market_ids)))
         if len(market_ids) > 0:
+            print("Found {} market Ids".format(len(market_ids)))
             for i in range(0, len(market_ids), 3):
                 r = write_books_to_database(convert_to_market_book_objs(get_books(market_ids[i: i+3])))
                 print("written down {} books to database".format(len(r.inserted_ids)))
