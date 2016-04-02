@@ -47,12 +47,25 @@ def get_markets_ids(competition, market_type_codes):
 
     return client.list_market_catalogue(
         MarketFilter(
-            market_type_codes=market_type_codes,
+            market_type_codes=[market_type_codes],
             competition_ids=[competition.id],
-            in_play_only=False  # Only get games that are currently running/in play
+            in_play_only=True  # Only get games that are currently running/in play
         ),
         market_projection=[MarketProjection.EVENT, MarketProjection.RUNNER_DESCRIPTION]
         # also return details about market event
+    )
+
+def get_market_types(competition):
+    """
+    Retrieves list of market_types
+    :param competition:
+    :return:
+    """
+
+    return client.list_market_types(
+        MarketFilter(
+            competition_ids=[competition.id],
+        ),
     )
 
 
