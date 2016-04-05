@@ -1,38 +1,44 @@
 import threading
 from datetime import datetime, timedelta
-from time import sleep
 from betfair import Betfair
 from betfair.models import MarketFilter, PriceProjection
 from betfair.constants import MarketProjection, PriceData, OrderProjection, MatchProjection, MarketStatus
 from config import DEVELOPER_APP_KEY, CERT_FILE, USERNAME, PASSWORD, APP_KEY, STATUS
+from db_functions import write_books_to_database
+from datetime import datetime
 
 client = Betfair(APP_KEY, CERT_FILE)
 client.login(USERNAME, PASSWORD)
 
 
-# class CaptureMatch(threading.Thread):
-#     def __init__(self, queue):
-#         """
-#
-#         :param time_stop: *datetime* time to stop exectuion of code
-#         :param delta: *int* number of seconds to wait
-#         :param game_name: *string* String representation of game
-#         :return:
-#         """
-#         threading.Thread.__init__(self)
-#         # self.time_start = time_start
-#         self.time_stop = time_stop
-#         print(self.time_stop)
-#         self.delta = delta
-#         self.game_name = game_name
-#         self.queue = queue
-#
-#     def run(self):
-#         current_datetime = datetime.now()
-#         while current_datetime < self.time_stop:
-#             print("Currently at time: {} with thread {}".format(current_datetime, self.game_name))
-#             sleep(self.delta)
-#             current_datetime = datetime.now()
+class CaptureMatch(threading.Thread):
+    def __init__(self, queue):
+        """
+
+        :param time_stop: *datetime* time to stop exectuion of code
+        :param delta: *int* number of seconds to wait
+        :param game_name: *string* String representation of game
+        :return:
+        """
+        threading.Thread.__init__(self)
+        self.queue = queue
+        print("Thread initialised")
+
+    def run(self):
+        print("Thread Running")
+
+        while True:
+            market_ids = self.queue.get(block=True, timeout=None)
+            try:
+                r = write_books_to_database(convert_to_market_book_objs(get_books(market_ids)))
+                print("written down {} books to database".format(len(r.inserted_ids)))
+
+            except TimeoutError as e:
+                # Re initiate connection with betfair
+                client.login(USERNAME, PASSWORD)
+            except Exception as e:
+                with open("Exceptions/{}".format(datetime.now())) as e_file:
+                    e_file.write("Exception Type: {}\n Args: {}".format(type(e), e.args))
 
 
 def get_markets_ids(competition, market_type_codes):
