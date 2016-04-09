@@ -1,9 +1,9 @@
 import time
 import sys
+from queue import Queue
 
-from betfair_functions import get_markets_ids, get_competition, convert_to_market_objs, get_books, convert_to_market_book_objs, get_market_types
-from db_functions import write_markets_to_database, get_live_games_market_ids, clean_out_db, write_books_to_database
-
+from betfair_functions import get_markets_ids, get_competition, convert_to_market_objs, get_market_types, CaptureMatch
+from db_functions import write_markets_to_database, get_live_games_market_ids, clean_out_db
 
 
 def clean_db():
@@ -39,7 +39,7 @@ def addMarketCatalogues(comp_string, market_codes):
         print("\t{}) name: {}".format(i, c.market_type))
 
     res = int(input("select market: "))
-
+    print(market_codes[res].market_type)
     # Find all markets for competition and place into mongodb
     markets = get_markets_ids(
         competition=competition,
@@ -67,16 +67,23 @@ def capture_games(time_interval):
     @param: time_interval - number of time to sleep between fetches (in seconds)
     @return: None
     """
+    # Set up threads to fetch and process data
+    q = Queue()
+    for i in range(4):
+        CaptureMatch(queue=q).start()
+
     # Forever keep searching for games that are live.
     while True:
         # Find list of markets inplay
         market_ids = get_live_games_market_ids()
+        print("Found {} market Ids".format(len(market_ids)))
+
         if len(market_ids) > 0:
             print("Found {} market Ids".format(len(market_ids)))
             for i in range(0, len(market_ids), 3):
-                r = write_books_to_database(convert_to_market_book_objs(get_books(market_ids[i: i+3])))
-                print("written down {} books to database".format(len(r.inserted_ids)))
-        time.sleep(time_interval)   # now wait a second
+                q.put(market_ids[i: i+3])
+
+        time.sleep(time_interval)   # now wait time_interval seconds
 
 
 if __name__ == "__main__":
