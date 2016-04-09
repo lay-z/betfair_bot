@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from betfair import Betfair
 from betfair.models import MarketFilter, PriceProjection
 from betfair.constants import MarketProjection, PriceData, OrderProjection, MatchProjection, MarketStatus
-from config import DEVELOPER_APP_KEY, CERT_FILE, USERNAME, PASSWORD, APP_KEY, STATUS
+from config import DEVELOPER_APP_KEY, CERT_FILE, USERNAME, PASSWORD, APP_KEY, STATUS, DEBUG
 from db_functions import write_books_to_database
 from datetime import datetime
 
@@ -12,7 +12,7 @@ client.login(USERNAME, PASSWORD)
 
 
 class CaptureMatch(threading.Thread):
-    def __init__(self, queue):
+    def __init__(self, queue, thread_no):
         """
 
         :param time_stop: *datetime* time to stop exectuion of code
@@ -21,22 +21,31 @@ class CaptureMatch(threading.Thread):
         :return:
         """
         threading.Thread.__init__(self)
-        self.queue = queue
-        print("Thread initialised")
+        self.queue = queue 
+        self.thread_no = thread_no
+        if DEBUG:
+            print("Thread no: {} initialised".format(self.thread_no))
 
     def run(self):
-        print("Thread Running")
+        if DEBUG:
+            print("Thread no: {}  Running".format(self.thread_no))
 
         while True:
             market_ids = self.queue.get(block=True, timeout=None)
+            if DEBUG:
+                print("Thread no: {} getting data".format(self.thread_no))
             try:
                 r = write_books_to_database(convert_to_market_book_objs(get_books(market_ids)))
-                print("written down {} books to database".format(len(r.inserted_ids)))
+                if DEBUG:
+                    print("Thread no: {} written down {} books to database".format(self.thread_no,len(r.inserted_ids)))
 
             except TimeoutError as e:
+                print("TIMEOUT ERROR !!\n{}".format(e.argv))
+                print("Reinitalising client login")
                 # Re initiate connection with betfair
                 client.login(USERNAME, PASSWORD)
             except Exception as e:
+                print("EXCEPTION OCCURED!!\n{}".format(e.argv))
                 with open("Exceptions/{}".format(datetime.now())) as e_file:
                     e_file.write("Exception Type: {}\n Args: {}".format(type(e), e.args))
 
@@ -55,7 +64,7 @@ def get_markets_ids(competition, market_type_codes):
         MarketFilter(
             market_type_codes=[market_type_codes],
             competition_ids=[competition.id],
-            in_play_only=True  # Only get games that are currently running/in play
+            in_play_only=False  # Only get games that are currently running/in play
         ),
         market_projection=[MarketProjection.EVENT, MarketProjection.RUNNER_DESCRIPTION]
         # also return details about market event

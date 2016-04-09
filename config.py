@@ -19,3 +19,5 @@ STATUS = {
     'OPEN': 1,
     'SUSPENDED': 2
 }
+
+DEBUG = bool(environ.get("BORED_DEBUG", False))

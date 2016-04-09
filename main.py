@@ -4,6 +4,7 @@ from queue import Queue
 
 from betfair_functions import get_markets_ids, get_competition, convert_to_market_objs, get_market_types, CaptureMatch
 from db_functions import write_markets_to_database, get_live_games_market_ids, clean_out_db
+from config import DEBUG
 
 
 def clean_db():
@@ -12,12 +13,11 @@ def clean_db():
     """
     clean_out_db()
 
-def addMarketCatalogues(comp_string, market_codes):
+def addMarketCatalogues(comp_string):
     """
     Searches for competitions and saves any upcoming games into markets collection
     (does not find lives games)
     @param: comp_string *string*: name of competition being searched for
-    @parram market_codes: Array of betfair market codes to add into books.
     @return: None
     """
     # Find competition
@@ -69,17 +69,17 @@ def capture_games(time_interval):
     """
     # Set up threads to fetch and process data
     q = Queue()
-    for i in range(4):
-        CaptureMatch(queue=q).start()
+    for thread in range(4):
+        CaptureMatch(queue=q, thread_no=thread).start()
 
     # Forever keep searching for games that are live.
     while True:
         # Find list of markets inplay
         market_ids = get_live_games_market_ids()
-        print("Found {} market Ids".format(len(market_ids)))
+        if DEBUG:
+            print("Found {} market Ids".format(len(market_ids)))
 
         if len(market_ids) > 0:
-            print("Found {} market Ids".format(len(market_ids)))
             for i in range(0, len(market_ids), 3):
                 q.put(market_ids[i: i+3])
 
@@ -93,7 +93,12 @@ if __name__ == "__main__":
         # Incase no argument provided, capture games with 1 second increment
         capture_games(1)
     if sys.argv[1] == "competition":
-        addMarketCatalogues(sys.argv[2], sys.argv[3:])
+        print("Added games to DB")
+        addMarketCatalogues(sys.argv[2])
     if sys.argv[1] == "capture":
-        capture_games(sys.argv[2])
+        if sys.argv[2] is not None:
+            capture_games(int(sys.argv[2]))
+        else:
+            print("Must provide second argument for capture")
+
 
