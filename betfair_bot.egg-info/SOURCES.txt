@@ -1,0 +1,4 @@
+betfair_bot.egg-info/PKG-INFO
+betfair_bot.egg-info/SOURCES.txt
+betfair_bot.egg-info/dependency_links.txt
+betfair_bot.egg-info/top_level.txt

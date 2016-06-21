@@ -1,6 +1,7 @@
 import threading
 from datetime import datetime, timedelta
 from betfair import Betfair
+from betfair.Exception import TimeoutError
 from betfair.models import MarketFilter, PriceProjection
 from betfair.constants import MarketProjection, PriceData, OrderProjection, MatchProjection, MarketStatus
 from config import DEVELOPER_APP_KEY, CERT_FILE, USERNAME, PASSWORD, APP_KEY, STATUS, DEBUG
@@ -12,7 +13,7 @@ client.login(USERNAME, PASSWORD)
 
 
 class CaptureMatch(threading.Thread):
-    def __init__(self, queue, thread_no):
+    def __init__(self, queue, thread_no, db):
         """
 
         :param time_stop: *datetime* time to stop exectuion of code
@@ -21,8 +22,9 @@ class CaptureMatch(threading.Thread):
         :return:
         """
         threading.Thread.__init__(self)
-        self.queue = queue 
+        self.queue = queue
         self.thread_no = thread_no
+        self.db = db
         if DEBUG:
             print("Thread no: {} initialised".format(self.thread_no))
 
@@ -35,9 +37,12 @@ class CaptureMatch(threading.Thread):
             if DEBUG:
                 print("Thread no: {} getting data".format(self.thread_no))
             try:
-                r = write_books_to_database(convert_to_market_book_objs(get_books(market_ids)))
+                b = get_books(market_ids)
+                r = self.db.write_books_to_database(
+                    convert_to_market_book_objs(b))
                 if DEBUG:
-                    print("Thread no: {} written down {} books to database".format(self.thread_no,len(r.inserted_ids)))
+                    print("Thread no: {} written down {} books to database"
+                          .format(self.thread_no, len(r.inserted_ids)))
 
             except TimeoutError as e:
                 print("TIMEOUT ERROR !!\n{}".format(e.argv))
@@ -47,28 +52,36 @@ class CaptureMatch(threading.Thread):
             except Exception as e:
                 print("EXCEPTION OCCURED!!\n{}".format(e.argv))
                 with open("Exceptions/{}".format(datetime.now())) as e_file:
-                    e_file.write("Exception Type: {}\n Args: {}".format(type(e), e.args))
+                    e_file.write(
+                        "Exception Type: {}\n Args: {}"
+                        .format(type(e), e.args))
 
 
 def get_markets_ids(competition, market_type_codes):
     """
-    Gets all the competition IDS in betfair for a given competiion and a given market_type
+    Gets all the competition IDS in betfair for a given competiion
+    and a given market_type
 
     :param competition: Betfair competition model
-    :param market_type_codes: *String* Betfair market codes, to receive market_ids for games
-    :return: List of betfair MarketCatalogues for inplay markets in the specified leage
-            MarketCatalogues will also contain information about the event and description about the runners
+    :param market_type_codes: *String* Betfair market codes, to receive
+                              market_ids for games
+    :return: List of betfair MarketCatalogues for inplay markets in the
+             specified league MarketCatalogues will also contain information
+             about the event and description about the runners
     """
 
     return client.list_market_catalogue(
         MarketFilter(
             market_type_codes=[market_type_codes],
             competition_ids=[competition.id],
-            in_play_only=False  # Only get games that are currently running/in play
+            # Only get games that are currently running/in play
+            in_play_only=False
         ),
-        market_projection=[MarketProjection.EVENT, MarketProjection.RUNNER_DESCRIPTION]
+        market_projection=[MarketProjection.EVENT,
+                           MarketProjection.RUNNER_DESCRIPTION]
         # also return details about market event
     )
+
 
 def get_market_types(competition):
     """
@@ -103,6 +116,7 @@ def get_competition(name):
     if len(c) > 0:
         return c
 
+
 def convert_to_market_objs(market_catalogues):
     """
     Converts/formats market_catalogue into eventObj to be stored into mongodb
@@ -118,6 +132,7 @@ def convert_to_market_objs(market_catalogues):
 
         catalogues.append(catalogue)
     return catalogues
+
 
 def convert_to_market_book_objs(market_books):
     """

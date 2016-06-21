@@ -1,6 +1,7 @@
 # Generic Python Stuff
 *.pyc
 .cache
+.egg-info/
 
 # Build your own damn certificates :P
 certs/*

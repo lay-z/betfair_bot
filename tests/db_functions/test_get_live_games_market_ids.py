@@ -1,23 +1,19 @@
 from unittest import TestCase
-import pytest
-from config import DB_NAME, MARKETS_COLLECTION, STATUS, MARKET_BOOK_COLLECTION
+from config import MARKETS_COLLECTION, STATUS, MARKET_BOOK_COLLECTION
 from pymongo import MongoClient
 from datetime import datetime, timedelta
-from db_functions import get_live_games_market_ids, write_books_to_database
+from marketsdb import MarketsDB
 
 
 class TestGet_live_games_market_ids(TestCase):
     #  Run once
     def setup_class(self):
-        self.market_col = MongoClient()[DB_NAME][MARKETS_COLLECTION]
-        self.books_col = MongoClient()[DB_NAME][MARKET_BOOK_COLLECTION]
+        self.marketdb = MarketsDB()
 
     # Run before every test method
     def setUp(self):
         # Set up database
-        self.market_col.drop()
-        self.books_col.drop()
-
+        self.marketdb.clean_out_db()
 
     def test_get_live_games_market_ids(self):
         # Check that it only get games that are before a certain date
@@ -26,7 +22,7 @@ class TestGet_live_games_market_ids(TestCase):
         # Given
         marketId = ['1.234', '1.111', '3.553']
 
-        self.market_col.insert_many([
+        self.marketdb.db[MARKETS_COLLECTION].insert_many([
             {
                 # Literally event just started
                 "marketId": marketId[0],
@@ -45,9 +41,12 @@ class TestGet_live_games_market_ids(TestCase):
             }
         ])
 
+        print("In database currently:")
+        print([c for c in self.marketdb.db[MARKETS_COLLECTION].find()])
+
         # When
         correct_live_ids = [marketId[0]]
-        live_ids = get_live_games_market_ids()
+        live_ids = self.marketdb.get_live_games_market_ids()
 
         # Then
         self.assertEqual(live_ids, correct_live_ids)
@@ -59,7 +58,7 @@ class TestGet_live_games_market_ids(TestCase):
         marketId = ['1.234', '1.111', '3.553']
 
         # Set up games that already exist
-        self.market_col.insert_many([
+        self.marketdb.db[MARKETS_COLLECTION].insert_many([
             {
                 # Literally event just started
                 "marketId": marketId[0],
@@ -74,10 +73,11 @@ class TestGet_live_games_market_ids(TestCase):
         }
 
         # When
-        write_books_to_database([book])
+        self.marketdb.write_books_to_database([book])
 
         # Then
-        markets = self.market_col.find().next()  # will raise execption if no data available
+        # will raise execption if no data available
+        markets = self.marketdb.db[MARKETS_COLLECTION].find().next()
         self.assertEqual(markets["status"], STATUS["CLOSED"])
 
     def test_write_books_to_db_only_changes_status_not_anything_else(self):
@@ -93,7 +93,7 @@ class TestGet_live_games_market_ids(TestCase):
             "status": STATUS["OPEN"]
         }
         # Set up games that already exist
-        self.market_col.insert_many([
+        self.marketdb.db[MARKETS_COLLECTION].insert_many([
             document
         ])
 
@@ -103,9 +103,10 @@ class TestGet_live_games_market_ids(TestCase):
         }
 
         # When
-        write_books_to_database([book])
+        self.marketdb.write_books_to_database([book])
         document["status"] = STATUS["CLOSED"]
 
         # Then
-        markets = self.market_col.find().next()  # will raise execption if no data available
+        # will raise execption if no data available
+        markets = self.marketdb.db[MARKETS_COLLECTION].find().next()
         self.assertEqual(document, markets)
