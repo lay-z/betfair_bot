@@ -1,0 +1,1 @@
+Exception Type: HTTPSConnectionPool(host='api.betfair.com', port=443): Read timed out. (read timeout=None)
