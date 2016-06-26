@@ -16,3 +16,10 @@ betfair.py
 * Combine .crt and .key file to build .pem file `cat client-2048.cert client-2048.key > client-2048.pem`
 * Place pem file into certs folder
 * Run python main.py
+
+
+# TODO
+* Daemonize process for searching for games
+* argparse for commandline arguments
+* Webhooks for automatic deployment?
+* Telegram message if service/daemon goes down?

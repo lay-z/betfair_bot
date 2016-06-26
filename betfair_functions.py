@@ -1,11 +1,11 @@
 import threading
 from datetime import datetime, timedelta
 from betfair import Betfair
-from betfair.Exception import TimeoutError
+from betfair.exceptions import ApiError
 from betfair.models import MarketFilter, PriceProjection
 from betfair.constants import MarketProjection, PriceData, OrderProjection, MatchProjection, MarketStatus
 from config import DEVELOPER_APP_KEY, CERT_FILE, USERNAME, PASSWORD, APP_KEY, STATUS, DEBUG
-from db_functions import write_books_to_database
+from marketsdb import MarketsDB
 from datetime import datetime
 
 client = Betfair(APP_KEY, CERT_FILE)
@@ -13,18 +13,21 @@ client.login(USERNAME, PASSWORD)
 
 
 class CaptureMatch(threading.Thread):
-    def __init__(self, queue, thread_no, db):
+
+    def __init__(self, queue, thread_no, db=MarketsDB()):
         """
 
         :param time_stop: *datetime* time to stop exectuion of code
         :param delta: *int* number of seconds to wait
         :param game_name: *string* String representation of game
+        :param db: **MarketsDb** - Object to reading/writing DB data to DB
         :return:
         """
         threading.Thread.__init__(self)
         self.queue = queue
         self.thread_no = thread_no
         self.db = db
+        self.client = client
         if DEBUG:
             print("Thread no: {} initialised".format(self.thread_no))
 
@@ -44,17 +47,19 @@ class CaptureMatch(threading.Thread):
                     print("Thread no: {} written down {} books to database"
                           .format(self.thread_no, len(r.inserted_ids)))
 
-            except TimeoutError as e:
-                print("TIMEOUT ERROR !!\n{}".format(e.argv))
+            except ApiError as e:
+                global client
+
+                print("TIMEOUT ERROR !!\n{}".format(e))
                 print("Reinitalising client login")
                 # Re initiate connection with betfair
                 client.login(USERNAME, PASSWORD)
-            except Exception as e:
-                print("EXCEPTION OCCURED!!\n{}".format(e.argv))
-                with open("Exceptions/{}".format(datetime.now())) as e_file:
-                    e_file.write(
-                        "Exception Type: {}\n Args: {}"
-                        .format(type(e), e.args))
+            # except Exception as e:
+            #     print("EXCEPTION OCCURED!!\n{}".format(e))
+            #     with open("Exceptions/{}".format(datetime.now())) as e_file:
+            #         e_file.write(
+            #             "Exception Type: {}\n Args: {}"
+            #             .format(type(e), e.args))
 
 
 def get_markets_ids(competition, market_type_codes):
@@ -75,7 +80,7 @@ def get_markets_ids(competition, market_type_codes):
             market_type_codes=[market_type_codes],
             competition_ids=[competition.id],
             # Only get games that are currently running/in play
-            in_play_only=False
+            in_play_only=True
         ),
         market_projection=[MarketProjection.EVENT,
                            MarketProjection.RUNNER_DESCRIPTION]
@@ -120,7 +125,8 @@ def get_competition(name):
 def convert_to_market_objs(market_catalogues):
     """
     Converts/formats market_catalogue into eventObj to be stored into mongodb
-    :param market_catalogues: betfair market_catalogue model (must have event and runner data)
+    :param market_catalogues: betfair market_catalogue model
+                              (must have event and runner data)
     :return: list of dictionaries to write to
     """
     catalogues = []

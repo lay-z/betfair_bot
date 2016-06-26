@@ -1,8 +1,8 @@
-from pymongo import MongoClient, UpdateOne, InsertOne
+from pymongo import MongoClient, UpdateOne
 from pymongo.errors import BulkWriteError
-from datetime import datetime, timedelta
+from datetime import datetime
 import config
-from threading import Thread
+# from threading import Thread
 
 # Connect to mongo database
 
@@ -82,7 +82,7 @@ class MarketsDB():
         except BulkWriteError as e:
             print(e.details)
 
-        return self.book_col.insert_many(books)
+        return self.book_col.insert_many(books, ordered=False)
 
     def get_live_games_market_ids(self):
         """

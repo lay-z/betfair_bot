@@ -5,7 +5,7 @@ from queue import Queue
 from pymongo import MongoClient
 
 from betfair_functions import get_markets_ids, get_competition
-from betfair_functions import convert_to_market_objs, get_market_types,
+from betfair_functions import convert_to_market_objs, get_market_types
 from betfair_functions import CaptureMatch
 from marketsdb import MarketsDB
 import config
@@ -86,6 +86,8 @@ def capture_games(time_interval, db):
 
 
 if __name__ == "__main__":
+    # TODO include argparse to make sense of commandline arguments
+    # https://docs.python.org/3.4/library/argparse.html
 
     db = MarketsDB(MongoClient()[config.LIVE_DB])
 
